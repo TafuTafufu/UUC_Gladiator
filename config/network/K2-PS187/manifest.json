@@ -1,0 +1,14 @@
+{
+  "serverAddress": "K2-PS187",
+  "serverName": "Ghost Ship Mainframe",
+  "iconName": "UUC_Gladiator.jpg",
+  "terminalID": "K2-PS187",
+  "initialHistory": {
+    "visitor": [
+      "[K2-PS187 Neural Link Established]",
+      "神经连接已强制启动。",
+      "检测到未知接入源。",
+      "防御协议：开启。"
+    ]
+  }
+}
