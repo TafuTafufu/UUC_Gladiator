@@ -1,14 +1,21 @@
 {
   "serverAddress": "K2-PS187",
-  "serverName": "Ghost Ship Mainframe",
-  "iconName": "UUC_Gladiator.jpg",
+  "serverName": "Tatterdemalion",
+  "iconName": "Tatterdemalion_logo",
+  "iconSize": 90,
   "terminalID": "K2-PS187",
+
+  "year": 2145,
+  "reference": "(Tatterdemalion Local Ship Time)",
+
+  "headerExtraHTML": "<p>Connection node: Tatterdemalion · Access level: Crew</p>",
+
   "initialHistory": {
     "visitor": [
-      "[K2-PS187 Neural Link Established]",
-      "神经连接已强制启动。",
-      "检测到未知接入源。",
-      "防御协议：开启。"
+      "[Neural link established to Tatterdemalion mainframe]",
+      "神经链路校准完成。",
+      "正在同步舰载日志与环境参数……",
+      "警告：多处子系统存在未解析异常记录。"
     ]
   }
 }
