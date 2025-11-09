@@ -442,6 +442,9 @@ function canViewFullProfile(requester, target) {
 // ---------- 3. crew() ----------
 
 function crew(args) {
+  // 只在 UUC 服务器上工作
+  if (!isOnUUCServer()) return null;
+  
   const me = getCurrentUserId();
 
   if (me === "visitor") {
@@ -504,6 +507,9 @@ function crew(args) {
 // ---------- 4. profile() ----------
 
 function profile(args) {
+  // 只在 UUC 服务器上工作
+  if (!isOnUUCServer()) return null;
+  
   const me = getCurrentUserId();
   const db = window.crewProfiles || {};
 
