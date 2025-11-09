@@ -138,9 +138,22 @@ function outputLinesWithDelay(lines, delayed, resolve) {
     printLine(line);
     if (lines.length > 0) {
         setTimeout(outputLinesWithDelay, delayed, lines, delayed, resolve);
-    } else if (resolve) {
-        resolve();
+    } else {
+        scrollToBottom();
+        if (resolve) {
+            resolve();
+        }
     }
+}
+
+/**
+ * Scroll to the bottom of the page to show latest content
+ */
+function scrollToBottom() {
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+    });
 }
 
 /**
@@ -153,6 +166,7 @@ function printLine(data) {
     }
     output_.insertAdjacentHTML("beforeEnd", data);
     applySFX();
+    scrollToBottom();
 }
 
 function applySFX() {
