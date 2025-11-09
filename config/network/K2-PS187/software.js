@@ -229,16 +229,46 @@ function scan(args) {
     // Create a unique ID for this scan's progress bar
     const scanId = 'scan-progress-' + Date.now();
     
+    // Typewriter effect function
+    function typewriterEffect(element, lines, lineIndex = 0, charIndex = 0) {
+        if (lineIndex >= lines.length) return;
+        
+        const currentLine = lines[lineIndex];
+        const lineId = scanId + '-line-' + lineIndex;
+        
+        // Create line element if it doesn't exist
+        if (charIndex === 0) {
+            const lineElement = document.createElement('p');
+            lineElement.id = lineId;
+            lineElement.innerHTML = '';
+            element.appendChild(lineElement);
+        }
+        
+        const lineElement = document.getElementById(lineId);
+        if (!lineElement) return;
+        
+        if (charIndex < currentLine.length) {
+            // Add next character
+            lineElement.innerHTML = currentLine.substring(0, charIndex + 1);
+            setTimeout(() => typewriterEffect(element, lines, lineIndex, charIndex + 1), 20); // 20ms per character
+        } else {
+            // Move to next line after brief pause
+            setTimeout(() => typewriterEffect(element, lines, lineIndex + 1, 0), 50);
+        }
+    }
+    
     // Start the animation after a brief moment
     setTimeout(() => {
         let progress = 0;
         const progressBar = document.getElementById(scanId);
         if (!progressBar) return;
         
+        const barLength = 25; // Longer progress bar (25 blocks)
+        
         const interval = setInterval(() => {
-            progress += 10;
-            const filled = Math.floor(progress / 10);
-            const empty = 10 - filled;
+            progress += 4; // Increment by 4 to reach 100 in 25 steps
+            const filled = Math.floor((progress / 100) * barLength);
+            const empty = barLength - filled;
             const bar = '█'.repeat(filled) + '░'.repeat(empty);
             
             if (progress <= 100) {
@@ -247,33 +277,36 @@ function scan(args) {
             
             if (progress >= 100) {
                 clearInterval(interval);
+                progressBar.innerHTML = `扫描进度: [${bar}] 100%`;
                 
-                // After completion, show the scan results
+                // After completion, show the scan results with typewriter effect
                 setTimeout(() => {
                     const resultsDiv = document.getElementById(scanId + '-results');
                     if (resultsDiv) {
-                        resultsDiv.innerHTML = `
-                            <p></p>
-                            <p><span style="color:#96b38a">扫描完成 / Scan complete</span></p>
-                            <p></p>
-                            <p><span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span></p>
-                            <p></p>
-                            <p><span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span></p>
-                            <p><span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span></p>
-                            <p><span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span></p>
-                            <p><span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span></p>
-                            <p><span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span></p>
-                            <p><span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span></p>
-                            <p></p>
-                            <p><span style="color:#ff4d4d">警告：检测到多处结构性损伤</span></p>
-                            <p><span style="color:#ff4d4d">建议：立即进行紧急维修</span></p>
-                            <p></p>
-                            <p><span style="color:#96b38a">========================================================</span></p>
-                        `;
+                        const resultLines = [
+                            '',
+                            '<span style="color:#96b38a">扫描完成 / Scan complete</span>',
+                            '',
+                            '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+                            '',
+                            '<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>',
+                            '<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>',
+                            '<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>',
+                            '<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>',
+                            '<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>',
+                            '<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>',
+                            '',
+                            '<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>',
+                            '<span style="color:#ff4d4d">建议：立即进行紧急维修</span>',
+                            '',
+                            '<span style="color:#96b38a">========================================================</span>'
+                        ];
+                        
+                        typewriterEffect(resultsDiv, resultLines);
                     }
-                }, 200);
+                }, 300);
             }
-        }, 800); // Update every 800ms for ~8 second total animation
+        }, 320); // Update every 320ms for ~8 second total animation (25 steps * 320ms = 8000ms)
     }, 100);
     
     // Return the initial message with progress bar placeholder
@@ -281,7 +314,7 @@ function scan(args) {
         '<span style="color:#96b38a">开始扫描褴褛人号...</span>',
         '<span style="color:#96b38a">Initiating scan of Tatterdemalion...</span>',
         '',
-        `<span id="${scanId}">扫描进度: [░░░░░░░░░░] 0%</span>`,
+        `<span id="${scanId}">扫描进度: [░░░░░░░░░░░░░░░░░░░░░░░░░] 0%</span>`,
         `<div id="${scanId}-results"></div>`
     ].join('  ');
 }
