@@ -138,7 +138,8 @@ function status(args) {
         return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
     }
     
-    if (role === 'maintenance' || role === 'core') {
+    if (role === 'maintenance') {
+        // Maintenance users get instant display (no typewriter)
         return [
             '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
             '',
@@ -154,6 +155,64 @@ function status(args) {
             '',
             '<span style="color:#96b38a">========================================================</span>'
         ].join('  ');
+    }
+    
+    if (role === 'core') {
+        // Core users get cool typewriter effect
+        const statusId = 'status-output-' + Date.now();
+        
+        // Typewriter effect function
+        function typewriterEffect(element, lines, lineIndex = 0, charIndex = 0) {
+            if (lineIndex >= lines.length) return;
+            
+            const currentLine = lines[lineIndex];
+            const lineId = statusId + '-line-' + lineIndex;
+            
+            // Create line element if it doesn't exist
+            if (charIndex === 0) {
+                const lineElement = document.createElement('p');
+                lineElement.id = lineId;
+                lineElement.innerHTML = '';
+                element.appendChild(lineElement);
+            }
+            
+            const lineElement = document.getElementById(lineId);
+            if (!lineElement) return;
+            
+            if (charIndex < currentLine.length) {
+                // Add next character
+                lineElement.innerHTML = currentLine.substring(0, charIndex + 1);
+                setTimeout(() => typewriterEffect(element, lines, lineIndex, charIndex + 1), 15); // 15ms per character
+            } else {
+                // Move to next line after brief pause
+                setTimeout(() => typewriterEffect(element, lines, lineIndex + 1, 0), 40);
+            }
+        }
+        
+        setTimeout(() => {
+            const statusDiv = document.getElementById(statusId);
+            if (statusDiv) {
+                const statusLines = [
+                    '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+                    '',
+                    '<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>',
+                    '<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>',
+                    '<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>',
+                    '<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>',
+                    '<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>',
+                    '<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>',
+                    '',
+                    '<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>',
+                    '<span style="color:#ff4d4d">建议：立即进行紧急维修</span>',
+                    '',
+                    '<span style="color:#96b38a">========================================================</span>'
+                ];
+                
+                typewriterEffect(statusDiv, statusLines);
+            }
+        }, 50);
+        
+        return `<div id="${statusId}"></div>`;
     }
     
     return '<span style="color:#bd2d2d">权限不足 / Access denied</span>';
