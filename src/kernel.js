@@ -206,17 +206,34 @@ function kernel(appName, args) {
 }
 
 /**
+ * Normalizes server address to match actual directory names (case-insensitive lookup)
+ */
+function normalizeServerAddress(address) {
+    const addressMap = {
+        'k2-ps187': 'K2-PS187',
+        'uuc_gladiator': 'UUC_Gladiator',
+        'uuc-gladiator': 'UUC_Gladiator'
+    };
+    
+    const lowerAddress = address.toLowerCase();
+    return addressMap[lowerAddress] || address;
+}
+
+/**
  * Attempts to connect to a server.
  * Loads manifest.json / userlist.json / mailserver.json
  * and sets serverDatabase / userDatabase / userList / mailList.
  */
 kernel.connectToServer = function connectToServer(serverAddress, userName, passwd) {
     return new Promise((resolve, reject) => {
-        if (serverAddress === serverDatabase.serverAddress) {
+        // Normalize server address for case-insensitive lookup
+        const normalizedAddress = normalizeServerAddress(serverAddress);
+        
+        if (normalizedAddress === serverDatabase.serverAddress) {
             reject(new AlreadyOnServerError(serverAddress));
             return;
         }
-        $.get(`config/network/${serverAddress}/manifest.json`, (serverInfo) => {
+        $.get(`config/network/${normalizedAddress}/manifest.json`, (serverInfo) => {
             if (!userName && serverInfo.defaultUser) {
                 // 未指定账号 → 用默认账号（游客/匿名之类）
                 serverDatabase = serverInfo;
