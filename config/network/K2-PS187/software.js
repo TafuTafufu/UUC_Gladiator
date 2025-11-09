@@ -22,8 +22,13 @@ function isOnK2Server() {
 
 // help command - shows available commands
 function help(args) {
-    if (!isOnK2Server()) return null;
+    console.log('[K2 help] Called. Server:', getK2ServerAddress(), 'Role:', getK2UserRole());
+    if (!isOnK2Server()) {
+        console.log('[K2 help] Not on K2 server, returning null');
+        return null;
+    }
     const role = getK2UserRole();
+    console.log('[K2 help] On K2 server, role:', role);
     
     if (role === 'maintenance') {
         return [

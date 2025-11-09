@@ -659,16 +659,22 @@ function tryRunCustomCommand(cmdName, argsArray) {
     const overrideList = serverDatabase.overrideSystemCommands || [];
     const isOverrideAllowed = overrideList.includes(cmdName);
     
+    console.log(`[tryRunCustomCommand] cmd=${cmdName}, overrideList=`, overrideList, 'isOverrideAllowed=', isOverrideAllowed);
+    
     // 2. 如果这个命令是系统内建的，且服务器未允许覆盖，则使用系统命令
     if (system && typeof system[cmdName] === "function" && !isOverrideAllowed) {
+        console.log(`[tryRunCustomCommand] ${cmdName} is system command and not in override list, using system`);
         return false;
     }
 
     // 3. 找看看有没有我们自定义挂到 window 上的命令
     const fn = window[cmdName];
     if (typeof fn !== "function") {
+        console.log(`[tryRunCustomCommand] ${cmdName} not found in window`);
         return false; // 没有自定义实现，交回去
     }
+    
+    console.log(`[tryRunCustomCommand] Calling custom ${cmdName}`);
 
     // 4. 跑我们自己的实现
     let result;
