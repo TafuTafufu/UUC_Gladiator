@@ -21,7 +21,7 @@ function isOnK2Server() {
 }
 
 // help command - shows available commands
-function k2_help(args) {
+function help(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
@@ -61,7 +61,7 @@ function k2_help(args) {
 }
 
 // log command - shows ship log (core access only)
-function k2_log(args) {
+function log(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
@@ -88,7 +88,7 @@ function k2_log(args) {
 }
 
 // status command - shows ship status
-function k2_status(args) {
+function status(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
@@ -114,7 +114,7 @@ function k2_status(args) {
 }
 
 // query command - ask questions to the AI
-function k2_query(args) {
+function query(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
@@ -163,7 +163,7 @@ function k2_query(args) {
 }
 
 // scan command - scan tatterdemalion with progress bar
-function k2_scan(args) {
+function scan(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     const target = args ? args.join(' ').toLowerCase() : '';
@@ -214,8 +214,8 @@ function k2_scan(args) {
     };
 }
 
-// exit command - logout from server
-function k2_exit(args) {
+// exit command - logout from server  
+function exit(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
@@ -237,9 +237,10 @@ function k2_exit(args) {
 }
 
 // Attach all K2 commands to window so kernel can find them
-window.k2_help = k2_help;
-window.k2_log = k2_log;
-window.k2_status = k2_status;
-window.k2_query = k2_query;
-window.k2_scan = k2_scan;
-window.k2_exit = k2_exit;
+// These will only execute when on K2-PS187 server (checked via isOnK2Server)
+window.help = help;
+window.log = log;
+window.status = status;
+window.query = query;
+window.scan = scan;
+window.exit = exit;
