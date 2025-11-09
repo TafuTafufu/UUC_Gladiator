@@ -116,15 +116,59 @@ Configured for Replit Autoscale deployment:
 - ✅ Updated .gitignore for Node.js development
 - ✅ Installed all dependencies
 
+## K2-PS187 Server (Ghost Ship Mainframe)
+**Server Address**: `ssh k2-ps187` (case-insensitive)
+
+A fully custom horror-themed server featuring the corrupted AI of the abandoned Tatterdemalion research vessel.
+
+### K2 Features
+- **Three Role Types**:
+  - `crew` - Limited access (exit only)
+  - `maintenance` - Basic ship status
+  - `core` - Full AI access with visual effects
+  
+- **Six Crew Members**:
+  - `k2crew1` to `k2crew6` (all password: AWAKEN)
+  - `k2maint` (password: REPAIR87)
+  - `k2core` (password: AWAKEN)
+
+### Custom K2 Commands
+- `log` - Display 12-day ship log (days 387-418) with sequential chunk animation
+- `status` - Ship systems status (animated typewriter effect for core users)
+- `query [1-4]` - Ask questions to K2 AI (easter egg: question 4 unlocks after asking 1-3)
+- `scan tatterdemalion` - Animated scan with progress bar (core users only)
+- `exit` - Returns ALL users to UUC_Gladiator in not-logged-in state
+
+### Technical Implementation
+- **Server Isolation**: UUC-exclusive commands (crew, profile, mail, read, login, logout) properly blocked on K2
+- **Auto-scroll**: All animated commands automatically scroll to show latest content
+- **Typewriter Effects**: 15-20ms character delays for immersive text animations
+- **Sequential Animation**: Ship log displays in chunks with 500ms intervals
+- **Easter Egg System**: Query 4 only appears in help after asking questions 1-3
+- **Progress Bar**: 25-block animated scan progress (8 second duration)
+
+### Files Modified for K2
+- `config/network/K2-PS187/software.js` - All K2 custom commands
+- `config/network/K2-PS187/userlist.json` - User roles and credentials
+- `config/network/K2-PS187/manifest.json` - Server configuration
+- `config/network/UUC_Gladiator/override.js` - Server isolation checks
+- `src/kernel.js` - Server switching and command routing
+
 ## Current State
-The terminal is fully functional and running. The current configuration showcases the "UUC Gladiator" server with Chinese-language content for a sci-fi RPG campaign.
+The terminal is fully functional with TWO complete servers:
+1. **UUC_Gladiator** - Main tactical network (Chinese-language sci-fi RPG)
+2. **K2-PS187** - Ghost ship mainframe (horror-themed with corrupted AI)
+
+Players can switch between servers using `ssh [server-name]` and experience completely different command sets and storylines.
 
 ## Customization Notes
 This is a forked/customized version with:
 - Custom crew profiles system (crewProfiles.js)
-- Override.js for custom command behavior
-- Chinese language interface
-- Sci-fi military/tactical theme
+- Override.js for custom command behavior and server isolation
+- Chinese + English bilingual interface
+- Dual-themed servers (tactical military + horror)
+- Advanced animation system with auto-scroll
+- Role-based access control per server
 
 ## External Resources
 - Original project: github.com/jacksonbenete/email_terminal
