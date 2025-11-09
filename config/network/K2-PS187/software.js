@@ -226,35 +226,40 @@ function scan(args) {
         return '<span style="color:#bd2d2d">错误：未知目标 / Unknown target</span>';
     }
     
-    // Return initial message and use delayed output for progress bar
-    const progressMessages = [
-        '扫描进度: [░░░░░░░░░░] 0%',
-        '扫描进度: [██░░░░░░░░] 20%',
-        '扫描进度: [████░░░░░░] 40%',
-        '扫描进度: [██████░░░░] 60%',
-        '扫描进度: [████████░░] 80%',
-        '扫描进度: [██████████] 100%',
-        '',
-        '<span style="color:#96b38a">扫描完成 / Scan complete</span>',
-        '',
-        '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
-        '',
-        '<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>',
-        '<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>',
-        '<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>',
-        '<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>',
-        '<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>',
-        '<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>',
-        '',
-        '<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>',
-        '<span style="color:#ff4d4d">建议：立即进行紧急维修</span>',
-        '',
-        '<span style="color:#96b38a">========================================================</span>'
-    ];
+    // Create animated progress bar - 11 steps (0%, 10%, 20%...100%) over 8 seconds
+    // 8000ms / 10 intervals = 800ms per step
+    const progressMessages = [];
     
-    // Use delayed output feature built into the terminal
+    // Generate progress bar for each percentage (0%, 10%, 20%...100%)
+    for (let i = 0; i <= 10; i++) {
+        const percent = i * 10;
+        const filled = Math.floor(i); // 0 to 10 filled blocks
+        const empty = 10 - filled;
+        const bar = '█'.repeat(filled) + '░'.repeat(empty);
+        progressMessages.push(`扫描进度: [${bar}] ${percent}%`);
+    }
+    
+    // Add completion message and scan results
+    progressMessages.push('');
+    progressMessages.push('<span style="color:#96b38a">扫描完成 / Scan complete</span>');
+    progressMessages.push('');
+    progressMessages.push('<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>');
+    progressMessages.push('');
+    progressMessages.push('<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>');
+    progressMessages.push('<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>');
+    progressMessages.push('<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>');
+    progressMessages.push('<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>');
+    progressMessages.push('<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>');
+    progressMessages.push('<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>');
+    progressMessages.push('');
+    progressMessages.push('<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>');
+    progressMessages.push('<span style="color:#ff4d4d">建议：立即进行紧急维修</span>');
+    progressMessages.push('');
+    progressMessages.push('<span style="color:#96b38a">========================================================</span>');
+    
+    // Use delayed output feature - 800ms between each progress update
     return {
-        delayed: 600,
+        delayed: 800,
         message: [
             '<span style="color:#96b38a">开始扫描褴褛人号...</span>',
             '<span style="color:#96b38a">Initiating scan of Tatterdemalion...</span>',
