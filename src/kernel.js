@@ -117,7 +117,10 @@ function output(data) {
 
         if (data && data.constructor === Array) {
             if (delayed && data.length > 0) {
-                outputLinesWithDelay(data, delayed, () => resolve(newLine()));
+                outputLinesWithDelay(data, delayed, () => {
+                    scrollToBottom();
+                    resolve(newLine());
+                });
                 return;
             }
             $.each(data, (_, value) => {
@@ -126,6 +129,7 @@ function output(data) {
         } else if (data) {
             printLine(data);
         }
+        scrollToBottom();
         resolve(newLine());
     });
 }
@@ -148,12 +152,17 @@ function outputLinesWithDelay(lines, delayed, resolve) {
 
 /**
  * Scroll to the bottom of the page to show latest content
+ * Uses requestAnimationFrame for better performance
  */
+let scrollScheduled = false;
 function scrollToBottom() {
-    window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: 'smooth'
-    });
+    if (!scrollScheduled) {
+        scrollScheduled = true;
+        requestAnimationFrame(() => {
+            window.scrollTo(0, document.body.scrollHeight);
+            scrollScheduled = false;
+        });
+    }
 }
 
 /**
@@ -166,7 +175,6 @@ function printLine(data) {
     }
     output_.insertAdjacentHTML("beforeEnd", data);
     applySFX();
-    scrollToBottom();
 }
 
 function applySFX() {
