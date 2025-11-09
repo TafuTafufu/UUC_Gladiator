@@ -1,0 +1,32 @@
+{
+  "hullIntegrity": {
+    "value": 23,
+    "unit": "%",
+    "status": "严重受损",
+    "color": "#ff4d4d"
+  },
+  "propulsion": {
+    "status": "离线",
+    "color": "#ff4d4d"
+  },
+  "lifeSupport": {
+    "status": "故障",
+    "color": "#bd2d2d"
+  },
+  "weapons": {
+    "status": "不可用",
+    "color": "#bd2d2d"
+  },
+  "communications": {
+    "status": "微弱信号",
+    "color": "#96b38a"
+  },
+  "coreAI": {
+    "status": "在线 (K2-PS187 神经核心)",
+    "color": "#96b38a"
+  },
+  "warnings": [
+    "警告：检测到多处结构性损伤",
+    "建议：立即进行紧急维修"
+  ]
+}

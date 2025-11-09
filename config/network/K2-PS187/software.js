@@ -165,7 +165,7 @@ function log(args) {
     return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
 }
 
-// status command - shows ship status
+// status command - shows ship status (fetches latest data from JSON)
 function status(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
@@ -176,21 +176,46 @@ function status(args) {
     
     if (role === 'maintenance') {
         // Maintenance users get instant display (no typewriter)
-        return [
-            '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
-            '',
-            '<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>',
-            '<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>',
-            '<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>',
-            '<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>',
-            '<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>',
-            '<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>',
-            '',
-            '<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>',
-            '<span style="color:#ff4d4d">建议：立即进行紧急维修</span>',
-            '',
-            '<span style="color:#96b38a">========================================================</span>'
-        ].join('  ');
+        const statusId = 'status-output-' + Date.now();
+        
+        setTimeout(() => {
+            fetch('config/network/K2-PS187/shipStatus.json')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById(statusId);
+                    if (!statusDiv) return;
+                    
+                    const lines = [
+                        '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+                        '',
+                        `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
+                        `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
+                        `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
+                        `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
+                        `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
+                        `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
+                        ''
+                    ];
+                    
+                    // Add warnings
+                    data.warnings.forEach(warning => {
+                        lines.push(`<span style="color:#ff4d4d">${warning}</span>`);
+                    });
+                    
+                    lines.push('');
+                    lines.push('<span style="color:#96b38a">========================================================</span>');
+                    
+                    statusDiv.innerHTML = lines.join('<br>');
+                })
+                .catch(error => {
+                    const statusDiv = document.getElementById(statusId);
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span style="color:#ff4d4d">错误：无法加载状态数据 / Error: Cannot load status data</span>';
+                    }
+                });
+        }, 50);
+        
+        return `<div id="${statusId}">正在加载状态... / Loading status...</div>`;
     }
     
     if (role === 'core') {
@@ -228,29 +253,43 @@ function status(args) {
         }
         
         setTimeout(() => {
-            const statusDiv = document.getElementById(statusId);
-            if (statusDiv) {
-                const statusLines = [
-                    '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
-                    '',
-                    '<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>',
-                    '<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>',
-                    '<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>',
-                    '<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>',
-                    '<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>',
-                    '<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>',
-                    '',
-                    '<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>',
-                    '<span style="color:#ff4d4d">建议：立即进行紧急维修</span>',
-                    '',
-                    '<span style="color:#96b38a">========================================================</span>'
-                ];
-                
-                typewriterEffect(statusDiv, statusLines);
-            }
+            fetch('config/network/K2-PS187/shipStatus.json')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById(statusId);
+                    if (!statusDiv) return;
+                    
+                    const statusLines = [
+                        '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+                        '',
+                        `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
+                        `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
+                        `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
+                        `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
+                        `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
+                        `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
+                        ''
+                    ];
+                    
+                    // Add warnings
+                    data.warnings.forEach(warning => {
+                        statusLines.push(`<span style="color:#ff4d4d">${warning}</span>`);
+                    });
+                    
+                    statusLines.push('');
+                    statusLines.push('<span style="color:#96b38a">========================================================</span>');
+                    
+                    typewriterEffect(statusDiv, statusLines);
+                })
+                .catch(error => {
+                    const statusDiv = document.getElementById(statusId);
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span style="color:#ff4d4d">错误：无法加载状态数据 / Error: Cannot load status data</span>';
+                    }
+                });
         }, 50);
         
-        return `<div id="${statusId}"></div>`;
+        return `<div id="${statusId}">正在加载状态... / Loading status...</div>`;
     }
     
     return '<span style="color:#bd2d2d">权限不足 / Access denied</span>';
