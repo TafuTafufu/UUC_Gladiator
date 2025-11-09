@@ -147,9 +147,13 @@ function log(args) {
                     // Add log text (as a paragraph)
                     logDiv.innerHTML += `<p style="color:#ccc; margin: 0 0 1em 0;">${entry.text}</p>`;
                     currentEntry++;
+                    // Auto-scroll to show latest content
+                    window.scrollTo(0, document.body.scrollHeight);
                 } else {
                     // Add footer
                     logDiv.innerHTML += '<br><span style="color:#96b38a">=========================================</span>';
+                    // Final scroll to bottom
+                    window.scrollTo(0, document.body.scrollHeight);
                     clearInterval(interval);
                 }
             }, 500); // Display each chunk every 500ms
@@ -214,9 +218,11 @@ function status(args) {
             if (charIndex < currentLine.length) {
                 // Add next character
                 lineElement.innerHTML = currentLine.substring(0, charIndex + 1);
+                window.scrollTo(0, document.body.scrollHeight);
                 setTimeout(() => typewriterEffect(element, lines, lineIndex, charIndex + 1), 15); // 15ms per character
             } else {
                 // Move to next line after brief pause
+                window.scrollTo(0, document.body.scrollHeight);
                 setTimeout(() => typewriterEffect(element, lines, lineIndex + 1, 0), 40);
             }
         }
@@ -313,8 +319,10 @@ function query(args) {
                     if (charIndex < text.length) {
                         queryDiv.innerHTML = text.substring(0, charIndex + 1);
                         charIndex++;
+                        window.scrollTo(0, document.body.scrollHeight);
                     } else {
                         clearInterval(interval);
+                        window.scrollTo(0, document.body.scrollHeight);
                     }
                 }, 15); // 15ms per character for smooth typewriter effect
             }, 50);
@@ -411,9 +419,11 @@ function scan(args) {
         if (charIndex < currentLine.length) {
             // Add next character
             lineElement.innerHTML = currentLine.substring(0, charIndex + 1);
+            window.scrollTo(0, document.body.scrollHeight);
             setTimeout(() => typewriterEffect(element, lines, lineIndex, charIndex + 1), 20); // 20ms per character
         } else {
             // Move to next line after brief pause
+            window.scrollTo(0, document.body.scrollHeight);
             setTimeout(() => typewriterEffect(element, lines, lineIndex + 1, 0), 50);
         }
     }
@@ -434,11 +444,13 @@ function scan(args) {
             
             if (progress <= 100) {
                 progressBar.innerHTML = `扫描进度: [${bar}] ${progress}%`;
+                window.scrollTo(0, document.body.scrollHeight);
             }
             
             if (progress >= 100) {
                 clearInterval(interval);
                 progressBar.innerHTML = `扫描进度: [${bar}] 100%`;
+                window.scrollTo(0, document.body.scrollHeight);
                 
                 // After completion, show the scan results with typewriter effect
                 setTimeout(() => {
