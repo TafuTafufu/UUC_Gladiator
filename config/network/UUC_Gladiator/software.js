@@ -10,6 +10,12 @@
 // 工具函数
 // -------------------------------------------------
 
+// 检查当前是否在 UUC_Gladiator 服务器上
+function isOnUUCServer() {
+    const currentServer = window.serverDatabase?.serverAddress || "";
+    return currentServer === "UUC_Gladiator" || currentServer === "UUC-GLD";
+}
+
 // 获取当前登录的舰员ID，比如 "vincent" / "diana" / "visitor"
 function getCurrentUserId() {
     const raw = localStorage.getItem("loggedUser") || "visitor";
@@ -99,6 +105,9 @@ function canViewFullProfile(requesterId, targetId) {
 // - 登录后任何舰员都能查看他人的 public
 //
 function crew(args) {
+    // 只在 UUC 服务器上工作
+    if (!isOnUUCServer()) return null;
+    
     const me = getCurrentUserId();
 
     // 未登录直接拒绝
@@ -192,6 +201,9 @@ function crew(args) {
 // - visitor 完全禁止
 //
 function profile(args) {
+    // 只在 UUC 服务器上工作
+    if (!isOnUUCServer()) return null;
+    
     const requester = getCurrentUserId(); // e.g. "diana", "vincent", "martin"
     const db = window.crewProfiles || {};
 
@@ -272,6 +284,9 @@ function profile(args) {
 // status 指令
 // -------------------------------------------------
 function status(args) {
+    // 只在 UUC 服务器上工作
+    if (!isOnUUCServer()) return null;
+    
     const me = getCurrentUserId();
 
     // === 访客模式：直接拒绝访问 ===
@@ -328,6 +343,9 @@ function status(args) {
 // 限制：visitor 不允许确认。
 //
 function acknowledge(args) {
+    // 只在 UUC 服务器上工作
+    if (!isOnUUCServer()) return null;
+    
     const me = getCurrentUserId();
 
     if (me === "visitor") {
