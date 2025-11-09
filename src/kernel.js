@@ -398,6 +398,13 @@ system = {
 
     login(args) {
         return new Promise((resolve, reject) => {
+            // Only allow on UUC servers
+            const currentServer = serverDatabase?.serverAddress || "";
+            if (currentServer !== "UUC_Gladiator" && currentServer !== "UUC-GLD") {
+                reject(new CommandNotFoundError("login"));
+                return;
+            }
+            
             // guard: 必须带 username:password
             if (!args || args.length === 0) {
                 reject(new UsernameIsEmptyError());
@@ -439,7 +446,13 @@ system = {
     },
 
     logout() {
-        return new Promise(() => {
+        return new Promise((resolve, reject) => {
+            // Only allow on UUC servers
+            const currentServer = serverDatabase?.serverAddress || "";
+            if (currentServer !== "UUC_Gladiator" && currentServer !== "UUC-GLD") {
+                reject(new CommandNotFoundError("logout"));
+                return;
+            }
             location.reload();
         });
     },
@@ -459,6 +472,13 @@ system = {
 
    mail() {
   return new Promise((resolve, reject) => {
+    // Only allow on UUC servers
+    const currentServer = serverDatabase?.serverAddress || "";
+    if (currentServer !== "UUC_Gladiator" && currentServer !== "UUC-GLD") {
+        reject(new CommandNotFoundError("mail"));
+        return;
+    }
+    
     const visible = (mailList || []).filter(
       (m) => Array.isArray(m.to) && m.to.includes(userDatabase.userId)
     );
@@ -473,6 +493,13 @@ system = {
 
    read(args) {
   return new Promise((resolve, reject) => {
+    // Only allow on UUC servers
+    const currentServer = serverDatabase?.serverAddress || "";
+    if (currentServer !== "UUC_Gladiator" && currentServer !== "UUC-GLD") {
+        reject(new CommandNotFoundError("read"));
+        return;
+    }
+    
     const idx = Number(args && args[0]);
     const visible = (mailList || []).filter(
       (m) => Array.isArray(m.to) && m.to.includes(userDatabase.userId)
@@ -501,6 +528,13 @@ system = {
     // ============================
     crew(args) {
         return new Promise((resolve, reject) => {
+            // Only allow on UUC servers
+            const currentServer = serverDatabase?.serverAddress || "";
+            if (currentServer !== "UUC_Gladiator" && currentServer !== "UUC-GLD") {
+                reject(new CommandNotFoundError("crew"));
+                return;
+            }
+            
             const db = window.crewProfiles;
             if (!db) {
                 reject(new Error("crew database not available on this node"));
