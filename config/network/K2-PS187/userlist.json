@@ -33,5 +33,19 @@
     "userId": "damien",
     "password": "takeearthback",
     "userName": "达米恩·冈恩 / 炮手&安保"
+  },
+
+  {
+    "userId": "tatt_maint",
+    "password": "REPAIR",
+    "userName": "Tatterdemalion Maintenance Link",
+    "role": "maintenance"
+  },
+
+  {
+    "userId": "k2core",
+    "password": "AWAKEN",
+    "userName": "K2-PS187 Core Access",
+    "role": "core"
   }
 ]

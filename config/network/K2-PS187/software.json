@@ -1,0 +1,31 @@
+{
+  "k2_help": {
+    "help": "显示可用命令列表",
+    "location": ["K2-PS187"]
+  },
+
+  "k2_log": {
+    "help": "查看飞船日志",
+    "location": ["K2-PS187"]
+  },
+
+  "k2_status": {
+    "help": "显示飞船状态",
+    "location": ["K2-PS187"]
+  },
+
+  "k2_query": {
+    "help": "向 K2-PS187 AI 实体提问",
+    "location": ["K2-PS187"]
+  },
+
+  "k2_scan": {
+    "help": "扫描目标。用法：k2_scan <目标名称>",
+    "location": ["K2-PS187"]
+  },
+
+  "k2_exit": {
+    "help": "登出服务器",
+    "location": ["K2-PS187"]
+  }
+}
