@@ -229,18 +229,27 @@ function query(args) {
     
     if (role === 'core') {
         if (!args || args.length === 0) {
-            return [
-                '<span style="color:#96b38a">===== 可用问题列表 / Available Queries =====</span>',
-                '',
-                '<span style="color:#ccc">使用方法：query <问题></span>',
-                '',
-                '<span style="color:#96b38a">1.</span> Who are you',
-                '<span style="color:#96b38a">2.</span> Where am I',
-                '<span style="color:#96b38a">3.</span> Why are you attacking me',
-                '<span style="color:#96b38a">4.</span> How are you',
-                '',
-                '<span style="color:#96b38a">==========================================</span>'
-            ].join('  ');
+            const out = [];
+            out.push(`<div class="k2-block">`);
+            out.push(`<p class="glow" style="font-size:1.1rem">╔════════════════════════════════╗</p>`);
+            out.push(`<p class="glow" style="font-size:1.1rem">║   K2-PS187 查询系统 / QUERY    ║</p>`);
+            out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
+            out.push(`<br>`);
+            out.push(`<span style="color:#ccc">使用方法：query &lt;问题&gt;</span><br>`);
+            out.push(`<br>`);
+            out.push(`<b>1. Who are you</b><br>`);
+            out.push(`<b>2. Where am I</b><br>`);
+            out.push(`<b>3. Why are you attacking me</b><br>`);
+            out.push(`<b>4. How are you</b><br>`);
+            out.push(`<br>`);
+            out.push(`<span style="color:#888">提示：输入完整问题以获取 K2-PS187 响应。</span>`);
+            out.push(`</div>`);
+            
+            return {
+                delayed: 0,
+                clear: false,
+                message: out
+            };
         }
         
         const question = args.join(' ').toLowerCase().trim();
