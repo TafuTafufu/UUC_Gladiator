@@ -35,39 +35,69 @@ function help(args) {
     const role = getK2UserRole();
     console.log('[K2 help] On K2 server, role:', role);
     
+    const out = [];
+    
     if (role === 'maintenance') {
-        return [
-            '<span style="color:#96b38a">可用命令 / Available Commands:</span>',
-            '',
-            '<span style="color:#ccc">help</span>           - 显示此帮助信息',
-            '<span style="color:#ccc">status</span>         - 查看飞船状态',
-            '<span style="color:#ccc">scan tatterdemalion</span> - 扫描褴褛人号',
-            '<span style="color:#ccc">exit</span>           - 登出服务器',
-            ''
-        ].join('  ');
+        out.push(`<div class="k2-block">`);
+        out.push(`<p class="glow" style="font-size:1.1rem">╔════════════════════════════════╗</p>`);
+        out.push(`<p class="glow" style="font-size:1.1rem">║   K2-PS187 维护接口 / MAINT    ║</p>`);
+        out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
+        out.push(`<br>`);
+        out.push(`<b>help</b>           - 显示此帮助信息<br>`);
+        out.push(`<b>status</b>         - 查看飞船状态<br>`);
+        out.push(`<b>scan tatterdemalion</b> - 扫描褴褛人号<br>`);
+        out.push(`<b>exit</b>           - 登出服务器<br>`);
+        out.push(`<br>`);
+        out.push(`<span style="color:#888">注意：维护权限受限。</span>`);
+        out.push(`</div>`);
+        
+        return {
+            delayed: 0,
+            clear: false,
+            message: out
+        };
     }
     
     if (role === 'core') {
-        return [
-            '<span style="color:#96b38a">所有指令 / All Commands:</span>',
-            '',
-            '<span style="color:#ccc">help</span>           - 显示此帮助信息',
-            '<span style="color:#ccc">log</span>            - 查看飞船日志',
-            '<span style="color:#ccc">status</span>         - 查看飞船状态',
-            '<span style="color:#ccc">query</span>          - 向 AI 实体提问',
-            '<span style="color:#ccc">scan tatterdemalion</span> - 扫描褴褛人号',
-            '<span style="color:#ccc">exit</span>           - 登出服务器',
-            ''
-        ].join('  ');
+        out.push(`<div class="k2-block">`);
+        out.push(`<p class="glow" style="font-size:1.1rem">╔════════════════════════════════╗</p>`);
+        out.push(`<p class="glow" style="font-size:1.1rem">║   K2-PS187 核心访问 / CORE     ║</p>`);
+        out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
+        out.push(`<br>`);
+        out.push(`<b>help</b>           - 显示此帮助信息<br>`);
+        out.push(`<b>log</b>            - 查看飞船日志<br>`);
+        out.push(`<b>status</b>         - 查看飞船状态<br>`);
+        out.push(`<b>query</b>          - 向 AI 实体提问<br>`);
+        out.push(`<b>scan tatterdemalion</b> - 扫描褴褛人号<br>`);
+        out.push(`<b>exit</b>           - 登出服务器<br>`);
+        out.push(`<br>`);
+        out.push(`<span style="color:#888">注意：核心权限已授予。</span>`);
+        out.push(`</div>`);
+        
+        return {
+            delayed: 0,
+            clear: false,
+            message: out
+        };
     }
     
-    return [
-        '<span style="color:#96b38a">可用命令 / Available Commands:</span>',
-        '',
-        '<span style="color:#ccc">help</span>    - 显示此帮助信息',
-        '<span style="color:#ccc">exit</span>    - 登出服务器',
-        ''
-    ].join('  ');
+    // Default/visitor
+    out.push(`<div class="k2-block">`);
+    out.push(`<p class="glow" style="font-size:1.1rem">╔════════════════════════════════╗</p>`);
+    out.push(`<p class="glow" style="font-size:1.1rem">║   K2-PS187 访客模式 / GUEST    ║</p>`);
+    out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
+    out.push(`<br>`);
+    out.push(`<b>help</b>    - 显示此帮助信息<br>`);
+    out.push(`<b>exit</b>    - 登出服务器<br>`);
+    out.push(`<br>`);
+    out.push(`<span style="color:#888">访问受限：请登录以获取更多权限。</span>`);
+    out.push(`</div>`);
+    
+    return {
+        delayed: 0,
+        clear: false,
+        message: out
+    };
 }
 
 // log command - shows ship log (core access only)
