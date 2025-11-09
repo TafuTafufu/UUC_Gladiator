@@ -2,17 +2,22 @@
 // Role-based command implementations
 
 // Helper function to get current user role from userDatabase
+// Note: userDatabase and serverDatabase are global variables in kernel.js
 function getK2UserRole() {
-    // Access the global userDatabase set by kernel.js
-    if (window.userDatabase && window.userDatabase.role) {
-        return window.userDatabase.role;
+    // These are global variables from kernel.js, not on window
+    if (typeof userDatabase !== 'undefined' && userDatabase && userDatabase.role) {
+        return userDatabase.role;
     }
     return 'default';
 }
 
 // Helper function to get current server address
 function getK2ServerAddress() {
-    return window.serverDatabase?.serverAddress || '';
+    // serverDatabase is a global variable from kernel.js
+    if (typeof serverDatabase !== 'undefined' && serverDatabase) {
+        return serverDatabase.serverAddress || '';
+    }
+    return '';
 }
 
 // Helper to check if we're on K2-PS187 server
