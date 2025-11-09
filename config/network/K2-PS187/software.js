@@ -69,7 +69,7 @@ function help(args) {
         out.push(`<b>help</b>           - 显示此帮助信息<br>`);
         out.push(`<b>log</b>            - 查看飞船日志<br>`);
         out.push(`<b>status</b>         - 查看飞船状态<br>`);
-        out.push(`<b>query</b>          - 向 AI 实体提问<br>`);
+        out.push(`<b>query</b>          - ?<br>`);
         out.push(`<b>scan tatterdemalion</b> - 扫描褴褛人号<br>`);
         out.push(`<b>exit</b>           - 登出服务器<br>`);
         out.push(`<br>`);
