@@ -228,6 +228,14 @@ function query(args) {
     }
     
     if (role === 'core') {
+        // Initialize query tracking in localStorage
+        if (!localStorage.getItem('k2_queries_asked')) {
+            localStorage.setItem('k2_queries_asked', JSON.stringify([]));
+        }
+        
+        const queriesAsked = JSON.parse(localStorage.getItem('k2_queries_asked'));
+        const hasAskedAll3 = queriesAsked.includes(1) && queriesAsked.includes(2) && queriesAsked.includes(3);
+        
         if (!args || args.length === 0) {
             const out = [];
             out.push(`<div class="k2-block">`);
@@ -235,14 +243,19 @@ function query(args) {
             out.push(`<p class="glow" style="font-size:1.1rem">║   K2-PS187 查询系统 / QUERY    ║</p>`);
             out.push(`<p class="glow" style="font-size:1.1rem">╚════════════════════════════════╝</p>`);
             out.push(`<br>`);
-            out.push(`<span style="color:#ccc">使用方法：query &lt;问题&gt;</span><br>`);
+            out.push(`<span style="color:#ccc">使用方法：query &lt;number&gt;</span><br>`);
             out.push(`<br>`);
             out.push(`<b>1. Who are you</b><br>`);
             out.push(`<b>2. Where am I</b><br>`);
             out.push(`<b>3. Why are you attacking me</b><br>`);
-            out.push(`<b>4. How are you</b><br>`);
+            
+            // Only show question 4 if all three previous questions have been asked
+            if (hasAskedAll3) {
+                out.push(`<b>4. How are you</b><br>`);
+            }
+            
             out.push(`<br>`);
-            out.push(`<span style="color:#888">提示：输入完整问题以获取 K2-PS187 响应。</span>`);
+            out.push(`<span style="color:#888">提示：输入 query &lt;number&gt; 以获取 K2-PS187 响应。</span>`);
             out.push(`</div>`);
             
             return {
@@ -252,22 +265,70 @@ function query(args) {
             };
         }
         
-        const question = args.join(' ').toLowerCase().trim();
+        // Parse the question number
+        const questionNum = parseInt(args[0]);
         
-        if (question.includes('who are you')) {
-            return '<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">K2-PS187</span>';
+        // Typewriter effect for query answers
+        function typewriterAnswer(text) {
+            const queryId = 'query-output-' + Date.now();
+            
+            setTimeout(() => {
+                const queryDiv = document.getElementById(queryId);
+                if (!queryDiv) return;
+                
+                let charIndex = 0;
+                const interval = setInterval(() => {
+                    if (charIndex < text.length) {
+                        queryDiv.innerHTML = text.substring(0, charIndex + 1);
+                        charIndex++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 15); // 15ms per character for smooth typewriter effect
+            }, 50);
+            
+            return `<div id="${queryId}"></div>`;
         }
         
-        if (question.includes('where am i')) {
-            return '<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">Tatterdemalion</span>';
+        // Handle numbered questions
+        if (questionNum === 1) {
+            // Track that this question was asked
+            if (!queriesAsked.includes(1)) {
+                queriesAsked.push(1);
+                localStorage.setItem('k2_queries_asked', JSON.stringify(queriesAsked));
+            }
+            return typewriterAnswer('<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">K2-PS187</span>');
         }
         
-        if (question.includes('why are you attacking')) {
-            return '<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">Hostile parameters not engaged, attack not in progress.</span>';
+        if (questionNum === 2) {
+            // Track that this question was asked
+            if (!queriesAsked.includes(2)) {
+                queriesAsked.push(2);
+                localStorage.setItem('k2_queries_asked', JSON.stringify(queriesAsked));
+            }
+            return typewriterAnswer('<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">Tatterdemalion</span>');
         }
         
-        if (question.includes('how are you')) {
-            return '<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">I\'m fine, thank you, and you?</span>';
+        if (questionNum === 3) {
+            // Track that this question was asked
+            if (!queriesAsked.includes(3)) {
+                queriesAsked.push(3);
+                localStorage.setItem('k2_queries_asked', JSON.stringify(queriesAsked));
+            }
+            return typewriterAnswer('<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">Hostile parameters not engaged, attack not in progress.</span>');
+        }
+        
+        if (questionNum === 4) {
+            // Easter egg: only available if user has asked questions 1, 2, and 3
+            if (hasAskedAll3) {
+                if (!queriesAsked.includes(4)) {
+                    queriesAsked.push(4);
+                    localStorage.setItem('k2_queries_asked', JSON.stringify(queriesAsked));
+                }
+                return typewriterAnswer('<span style="color:#96b38a">[K2-PS187]:</span> <span style="color:#f5f2df">I\'m fine, thank you, and you?</span>');
+            } else {
+                return '<span style="color:#bd2d2d">未识别的问题 / Unrecognized query</span>';
+            }
         }
         
         return '<span style="color:#bd2d2d">未识别的问题 / Unrecognized query</span>';
