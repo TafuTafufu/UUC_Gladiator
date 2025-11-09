@@ -32,6 +32,11 @@ function help(args) {
     }
     const role = getK2UserRole();
     
+    // Crew members have no access to commands except exit
+    if (role === 'crew') {
+        return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
+    }
+    
     const out = [];
     
     if (role === 'maintenance') {
@@ -102,7 +107,7 @@ function log(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
-    if (role === 'maintenance') {
+    if (role === 'maintenance' || role === 'crew') {
         return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
     }
     
@@ -128,6 +133,10 @@ function log(args) {
 function status(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
+    
+    if (role === 'crew') {
+        return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
+    }
     
     if (role === 'maintenance' || role === 'core') {
         return [
@@ -155,7 +164,7 @@ function query(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     
-    if (role === 'maintenance') {
+    if (role === 'maintenance' || role === 'crew') {
         return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
     }
     
@@ -204,6 +213,10 @@ function scan(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
     const target = args ? args.join(' ').toLowerCase() : '';
+    
+    if (role === 'crew') {
+        return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
+    }
     
     if (role !== 'maintenance' && role !== 'core') {
         return '<span style="color:#bd2d2d">权限不足 / Access denied</span>';
