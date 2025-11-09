@@ -27,13 +27,10 @@ function isOnK2Server() {
 
 // help command - shows available commands
 function help(args) {
-    console.log('[K2 help] Called. Server:', getK2ServerAddress(), 'Role:', getK2UserRole());
     if (!isOnK2Server()) {
-        console.log('[K2 help] Not on K2 server, returning null');
         return null;
     }
     const role = getK2UserRole();
-    console.log('[K2 help] On K2 server, role:', role);
     
     const out = [];
     
@@ -254,26 +251,24 @@ function scan(args) {
     };
 }
 
-// exit command - logout from server  
+// exit command - returns to UUC server in not-logged-in state
 function exit(args) {
     if (!isOnK2Server()) return null;
-    const role = getK2UserRole();
     
-    if (role === 'maintenance') {
-        return [
-            '<span style="color:#96b38a">成功登出至 UUC 首比之前 / Successfully logged out to UUC</span>',
-            ''
-        ].join('  ');
-    }
+    // Use kernel.connectToServer to switch back to UUC_Gladiator without login
+    // This will return user to UUC in a not-logged-in state
+    setTimeout(() => {
+        kernel.connectToServer('UUC_Gladiator', '', '');
+    }, 800);
     
-    if (role === 'core') {
-        return [
-            '<span style="color:#96b38a">成功登出 / Successfully logged out</span>',
-            ''
-        ].join('  ');
-    }
-    
-    return '<span style="color:#96b38a">已登出 / Logged out</span>';
+    return {
+        delayed: 0,
+        clear: false,
+        message: [
+            '<span style="color:#96b38a">正在断开连接... / Disconnecting from K2-PS187...</span>',
+            '<span style="color:#888">返回 UUC_Gladiator 主系统 / Returning to UUC_Gladiator main system...</span>'
+        ]
+    };
 }
 
 // Attach all K2 commands to window so kernel can find them
