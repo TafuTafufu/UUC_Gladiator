@@ -655,19 +655,22 @@ function userPasswordFrom(creds) {
 
 // ===== 自定义命令直连执行层 =====
 function tryRunCustomCommand(cmdName, argsArray) {
-    // 1. 如果这个命令是系统内建的（比如 login / mail / help / crew / etc）
-    //    我们就不要去抢，让 kernel 后面正常去跑 system[cmdName]
-    if (system && typeof system[cmdName] === "function") {
+    // 1. 检查当前服务器是否允许覆盖此系统命令
+    const overrideList = serverDatabase.overrideSystemCommands || [];
+    const isOverrideAllowed = overrideList.includes(cmdName);
+    
+    // 2. 如果这个命令是系统内建的，且服务器未允许覆盖，则使用系统命令
+    if (system && typeof system[cmdName] === "function" && !isOverrideAllowed) {
         return false;
     }
 
-    // 2. 找看看有没有我们自定义挂到 window 上的命令
+    // 3. 找看看有没有我们自定义挂到 window 上的命令
     const fn = window[cmdName];
     if (typeof fn !== "function") {
         return false; // 没有自定义实现，交回去
     }
 
-    // 3. 跑我们自己的实现
+    // 4. 跑我们自己的实现
     let result;
     try {
         result = fn(argsArray);
@@ -682,12 +685,21 @@ function tryRunCustomCommand(cmdName, argsArray) {
         };
     }
 
-    // 4. 整理输出
+    // 5. 如果自定义命令返回 null（比如不在该服务器），则让系统命令接管
+    if (result === null) {
+        return false;
+    }
+
+    // 6. 整理输出
     let lines = [];
     if (result && Array.isArray(result.message)) {
         lines = result.message;
     } else if (result && typeof result.message === "string") {
         lines = [result.message];
+    } else if (typeof result === "string") {
+        lines = [result];
+    } else if (Array.isArray(result)) {
+        lines = result;
     } else {
         lines = ["(no output)"];
     }

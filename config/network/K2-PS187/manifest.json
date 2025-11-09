@@ -3,6 +3,7 @@
   "serverName": "Ghost Ship Mainframe",
   "iconName": "UUC_Gladiator.jpg",
   "terminalID": "K2-PS187",
+  "overrideSystemCommands": ["help", "status", "exit"],
   "initialHistory": {
     "visitor": [
       "[K2-PS187 Neural Link Established]",
