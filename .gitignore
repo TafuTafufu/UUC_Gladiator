@@ -5,3 +5,6 @@ package-lock.json
 
 # Screenshot attachments (not part of project)
 attached_assets/
+
+# Dynamic ship status (managed via Postman API only!)
+config/network/K2-PS187/shipStatus.json
