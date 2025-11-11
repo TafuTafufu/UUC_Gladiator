@@ -1,21 +1,25 @@
 # How to Update K2-PS187 Ship Status via Postman
 
-This guide shows you how to update the ship status dynamically using Postman and the GitHub API.
+**IMPORTANT: This guide is for GitHub Pages deployment on `stage-2-test-branch`**
 
 ---
 
-## How It Works
+## 🎯 How It Works
 
-**Your Workflow:**
-1. You update `shipStatus.json` via Postman → GitHub API
-2. GitHub Pages rebuilds (1-2 minutes)
-3. Players type `status` command
-4. Terminal fetches latest JSON and displays updated values
-5. **No page refresh needed!**
+### The Workflow:
+1. **GM updates** → Postman → GitHub API → Updates `shipStatus.json` on GitHub
+2. **GitHub Pages rebuilds** → 1-2 minutes
+3. **Players type `status`** → Terminal fetches fresh JSON (bypasses cache!)
+4. **No page refresh needed!** Players just type the command again
+
+### Cache-Busting Implementation:
+- The terminal automatically adds `?t={timestamp}` to every fetch
+- This forces browsers to get fresh data instead of using cached files
+- GitHub Pages has a 10-minute cache, but we bypass it completely
 
 ---
 
-## Setup (One-Time)
+## ⚙️ Setup (One-Time)
 
 ### Step 1: Get GitHub Personal Access Token
 
@@ -23,343 +27,97 @@ This guide shows you how to update the ship status dynamically using Postman and
 2. Click **"Generate new token (classic)"**
 3. Set **Note**: "Terminal Status Updates"
 4. Set **Expiration**: 90 days (or custom)
-5. Check **repo** scope (grants full repository access)
+5. ✅ Check **`repo`** scope (grants full repository access)
 6. Click **"Generate token"**
 7. **Copy the token** (you won't see it again!)
 
 ---
 
-## Postman Collection Setup
+### Step 2: Set Up Postman Variables
 
-### Request 1: Get Current Status (GET)
+Create these **Collection Variables** or **Environment Variables**:
 
-**Purpose**: Get the current file's SHA (required for updates)
+| Variable | Value | Type |
+|----------|-------|------|
+| `github_username` | `TafuTafufu` | default |
+| `github_repo` | `UUC_Gladiator` | default |
+| `github_token` | `ghp_yourTokenHere` | secret |
+
+**How to add variables:**
+1. Click on your Collection/Environment
+2. Go to **Variables** tab
+3. Add the three variables above
+4. Mark `github_token` as **secret** type
+
+---
+
+## 📡 Postman Requests Setup
+
+### Request 1: GET Current Status
+
+**Purpose**: Get the current file's SHA (required before EVERY update)
 
 **Method**: `GET`  
 **URL**: 
 ```
-https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/contents/config/network/K2-PS187/shipStatus.json
+https://api.github.com/repos/{{github_username}}/{{github_repo}}/contents/config/network/K2-PS187/shipStatus.json
 ```
+
+**Params**:
+| Key | Value |
+|-----|-------|
+| `ref` | `stage-2-test-branch` |
 
 **Headers**:
-```
-Authorization: Bearer YOUR_GITHUB_TOKEN
-Accept: application/vnd.github+json
-```
+| Key | Value |
+|-----|-------|
+| `Authorization` | `Bearer {{github_token}}` |
+| `Accept` | `application/vnd.github+json` |
 
-**Expected Response**:
+**Expected Response (200 OK)**:
 ```json
 {
   "name": "shipStatus.json",
   "path": "config/network/K2-PS187/shipStatus.json",
-  "sha": "abc123def456...",
-  "content": "BASE64_ENCODED_JSON",
+  "sha": "94afc50037153b99b8d4....",  // ← COPY THIS!
+  "size": 684,
+  "content": "ewogICJodWxsSW50ZWdyaXR5Ij...",
   ...
 }
 ```
 
-**Copy the `sha` value** - you'll need it for updates!
+**⚠️ IMPORTANT**: Copy the `sha` value - you'll need it for the PUT request!
 
 ---
 
-### Request 2: Update Ship Status (PUT)
+### Request 2: PUT Update Ship Status
 
 **Purpose**: Push new ship status to GitHub
 
 **Method**: `PUT`  
 **URL**: 
 ```
-https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/contents/config/network/K2-PS187/shipStatus.json
-```
-
-**Headers**:
-```
-Authorization: Bearer YOUR_GITHUB_TOKEN
-Accept: application/vnd.github+json
-Content-Type: application/json
-```
-
-**Body** (raw JSON):
-```json
-{
-  "message": "Update ship status - hull integrity critical",
-  "content": "BASE64_ENCODED_CONTENT_HERE",
-  "sha": "SHA_FROM_GET_REQUEST"
-}
-```
-
----
-
-## Encoding Your Status Update
-
-You need to **Base64 encode** your JSON content before sending it.
-
-### Method 1: Online Encoder
-1. Go to https://www.base64encode.org/
-2. Paste your JSON (see example below)
-3. Click "Encode"
-4. Copy the result into the `content` field
-
-### Method 2: Postman Pre-request Script
-
-Add this to your **Pre-request Script** tab:
-
-```javascript
-// Define your new status
-const statusData = {
-  "hullIntegrity": {
-    "value": 15,
-    "unit": "%",
-    "status": "危急 / CRITICAL",
-    "color": "#ff0000"
-  },
-  "propulsion": {
-    "status": "离线",
-    "color": "#ff4d4d"
-  },
-  "lifeSupport": {
-    "status": "严重故障 / SEVERE MALFUNCTION",
-    "color": "#ff0000"
-  },
-  "weapons": {
-    "status": "不可用",
-    "color": "#bd2d2d"
-  },
-  "communications": {
-    "status": "微弱信号",
-    "color": "#96b38a"
-  },
-  "coreAI": {
-    "status": "在线 (K2-PS187 神经核心)",
-    "color": "#96b38a"
-  },
-  "warnings": [
-    "紧急警告：船体即将解体 / EMERGENCY: HULL BREACH IMMINENT",
-    "建议：立即弃船 / RECOMMENDATION: ABANDON SHIP"
-  ]
-};
-
-// Convert to JSON string
-const jsonString = JSON.stringify(statusData, null, 2);
-
-// Base64 encode
-const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-
-// Save to environment variable
-pm.environment.set("encodedStatus", base64Content);
-```
-
-Then in your **Body**, use:
-```json
-{
-  "message": "Update ship status",
-  "content": "{{encodedStatus}}",
-  "sha": "{{currentSha}}"
-}
-```
-
-### Method 3: Node.js / Command Line
-```bash
-echo '{"hullIntegrity": {"value": 10, "unit": "%", "status": "危急", "color": "#ff0000"}}' | base64
-```
-
----
-
-## Example Status Configurations
-
-### Scenario 1: Critical Damage
-```json
-{
-  "hullIntegrity": {
-    "value": 8,
-    "unit": "%",
-    "status": "危急 / CRITICAL",
-    "color": "#ff0000"
-  },
-  "propulsion": {
-    "status": "离线 / OFFLINE",
-    "color": "#ff4d4d"
-  },
-  "lifeSupport": {
-    "status": "失效 / FAILED",
-    "color": "#ff0000"
-  },
-  "weapons": {
-    "status": "毁坏 / DESTROYED",
-    "color": "#ff0000"
-  },
-  "communications": {
-    "status": "中断 / SEVERED",
-    "color": "#ff0000"
-  },
-  "coreAI": {
-    "status": "不稳定 (K2-PS187 神经核心) / UNSTABLE",
-    "color": "#ff4d4d"
-  },
-  "warnings": [
-    "危急警告：多系统失效 / CRITICAL: MULTIPLE SYSTEM FAILURE",
-    "船体解体倒计时：15分钟 / HULL COLLAPSE IN: 15 MINUTES",
-    "建议：立即启动逃生舱 / INITIATE ESCAPE POD IMMEDIATELY"
-  ]
-}
-```
-
-### Scenario 2: Repairs in Progress
-```json
-{
-  "hullIntegrity": {
-    "value": 45,
-    "unit": "%",
-    "status": "修复中 / REPAIRING",
-    "color": "#ffaa00"
-  },
-  "propulsion": {
-    "status": "重启中 / RESTARTING",
-    "color": "#ffaa00"
-  },
-  "lifeSupport": {
-    "status": "稳定 / STABLE",
-    "color": "#96b38a"
-  },
-  "weapons": {
-    "status": "离线 / OFFLINE",
-    "color": "#ff4d4d"
-  },
-  "communications": {
-    "status": "正常 / NOMINAL",
-    "color": "#96b38a"
-  },
-  "coreAI": {
-    "status": "在线 (K2-PS187 神经核心)",
-    "color": "#96b38a"
-  },
-  "warnings": [
-    "维修进度：45% / Repair progress: 45%",
-    "预计完成时间：2小时 / ETA: 2 hours"
-  ]
-}
-```
-
-### Scenario 3: Fully Operational
-```json
-{
-  "hullIntegrity": {
-    "value": 98,
-    "unit": "%",
-    "status": "优秀 / EXCELLENT",
-    "color": "#00ff00"
-  },
-  "propulsion": {
-    "status": "正常 / NOMINAL",
-    "color": "#96b38a"
-  },
-  "lifeSupport": {
-    "status": "正常 / NOMINAL",
-    "color": "#96b38a"
-  },
-  "weapons": {
-    "status": "就绪 / READY",
-    "color": "#96b38a"
-  },
-  "communications": {
-    "status": "强信号 / STRONG SIGNAL",
-    "color": "#96b38a"
-  },
-  "coreAI": {
-    "status": "在线 (K2-PS187 神经核心)",
-    "color": "#96b38a"
-  },
-  "warnings": [
-    "所有系统正常运行 / All systems operational"
-  ]
-}
-```
-
----
-
-## Complete Workflow
-
-### Step-by-Step Process
-
-**1. Get Current SHA**
-- Open Postman
-- Send GET request to get current file
-- Copy the `sha` value from response
-
-**2. Prepare Your Update**
-- Choose a status scenario or create your own
-- Base64 encode the JSON content
-- Save the encoded string
-
-**3. Send Update**
-- Send PUT request with:
-  - Your commit message
-  - Base64 encoded content
-  - Current SHA from step 1
-- You should get a 200 OK response
-
-**4. Wait for GitHub Pages**
-- Wait 1-2 minutes for GitHub Pages to rebuild
-- Check your repository's Actions tab to see deployment progress
-
-**5. Test In-Game**
-- Players type `status` in the terminal
-- They see the updated ship status immediately
-- **No page refresh needed!**
-
----
-
-## Postman Environment Variables
-
-Create these environment variables in Postman:
-
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `github_token` | `ghp_xxxxx...` | Your GitHub personal access token |
-| `github_username` | `YourUsername` | Your GitHub username |
-| `github_repo` | `your-repo-name` | Repository name |
-| `file_sha` | (auto-set) | Current file SHA (from GET request) |
-| `encoded_content` | (auto-set) | Base64 encoded JSON |
-
-Then use variables in your requests:
-```
 https://api.github.com/repos/{{github_username}}/{{github_repo}}/contents/config/network/K2-PS187/shipStatus.json
 ```
 
----
+**Params**:
+| Key | Value |
+|-----|-------|
+| `ref` | `stage-2-test-branch` |
 
-## Automation: Pre-request Script
+**Headers**:
+| Key | Value |
+|-----|-------|
+| `Authorization` | `Bearer {{github_token}}` |
+| `Accept` | `application/vnd.github+json` |
+| `Content-Type` | `application/json` |
 
-Add this complete script to automate SHA retrieval and encoding:
-
+**Pre-request Script** (Scripts tab):
 ```javascript
-const owner = pm.environment.get("github_username");
-const repo = pm.environment.get("github_repo");
-const token = pm.environment.get("github_token");
-const path = "config/network/K2-PS187/shipStatus.json";
-
-// Step 1: Get current file SHA
-pm.sendRequest({
-    url: `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-    method: 'GET',
-    header: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json'
-    }
-}, (err, res) => {
-    if (!err) {
-        const sha = res.json().sha;
-        pm.environment.set("file_sha", sha);
-        console.log("Current SHA:", sha);
-    } else {
-        console.error("Error fetching SHA:", err);
-    }
-});
-
-// Step 2: Prepare your status update
-const statusData = {
+// Edit your ship status here (normal JSON!)
+const shipStatus = {
   "hullIntegrity": {
-    "value": 23,
+    "value": 30,  // ← CHANGE THIS VALUE!
     "unit": "%",
     "status": "严重受损",
     "color": "#ff4d4d"
@@ -390,110 +148,199 @@ const statusData = {
   ]
 };
 
-// Step 3: Encode to Base64
-const jsonString = JSON.stringify(statusData, null, 2);
+// Auto-convert to Base64 (handles Chinese characters!)
+const jsonString = JSON.stringify(shipStatus, null, 2);
 const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-pm.environment.set("encoded_content", base64Content);
-console.log("Content encoded successfully");
+pm.environment.set("ship_status_content", base64Content);
+```
+
+**Body** (raw JSON):
+```json
+{
+  "message": "Update ship status from Postman",
+  "content": "{{ship_status_content}}",
+  "sha": "PASTE_SHA_FROM_GET_REQUEST_HERE",
+  "branch": "stage-2-test-branch"
+}
+```
+
+**Expected Response (200 OK)**:
+```json
+{
+  "content": {
+    "name": "shipStatus.json",
+    "sha": "a1b2c3d4e5f6...",  // ← NEW SHA (save for next update!)
+    ...
+  },
+  "commit": {
+    "message": "Update ship status from Postman",
+    ...
+  }
+}
 ```
 
 ---
 
-## Troubleshooting
+## 🎮 GM Workflow (During Gameplay)
 
-### Error 404: Not Found
-**Cause**: File path or repo name incorrect  
-**Solution**: Check your URL matches exactly: `config/network/K2-PS187/shipStatus.json`
+### Every Time You Want to Update:
 
-### Error 401: Unauthorized
-**Cause**: Invalid or missing GitHub token  
-**Solution**: Regenerate token with `repo` scope
+**Step 1: GET the current SHA**
+1. Open **GET request**
+2. Click **Send**
+3. Copy the **`sha`** value from response
+4. Keep it handy (paste in notepad)
 
-### Error 409: Conflict
-**Cause**: SHA mismatch (file was updated since you got the SHA)  
-**Solution**: Run GET request again to get latest SHA
+**Step 2: Edit ship values**
+1. Open **PUT request**
+2. Go to **Scripts** → **Pre-request** tab
+3. Edit the values you want to change (e.g., hull from 30% → 45%)
+4. Save the script
 
-### Error 422: Unprocessable Entity
-**Cause**: Content not properly Base64 encoded  
-**Solution**: Re-encode your JSON content
+**Step 3: Update the SHA and send**
+1. Go to **Body** tab
+2. Paste the SHA from Step 1 into the `"sha"` field
+3. Click **Send**
+4. You should get **200 OK**
+
+**Step 4: Wait for rebuild**
+1. GitHub Pages rebuilds (1-2 minutes)
+2. Players type `status` to see new values!
+
+**Step 5: For next update**
+1. The response from your PUT request contains a **NEW SHA**
+2. Copy that NEW SHA for your next update
+3. Repeat from Step 2
+
+---
+
+## 🔧 Available Status Fields
+
+You can change these values in the Pre-request Script:
+
+### Hull Integrity
+```javascript
+"hullIntegrity": {
+  "value": 50,          // Number (0-100)
+  "unit": "%",          // Keep as "%"
+  "status": "受损",      // Chinese description
+  "color": "#ffaa00"    // Hex color
+}
+```
+
+### System Status (propulsion, lifeSupport, weapons, communications, coreAI)
+```javascript
+"propulsion": {
+  "status": "在线",     // Status text (Chinese/English)
+  "color": "#96b38a"   // Hex color
+}
+```
+
+### Warnings Array
+```javascript
+"warnings": [
+  "警告：推进系统故障",
+  "建议：减速至安全速度"
+]
+```
+
+---
+
+## 🎨 Suggested Color Codes
+
+| Status | Color | Hex Code |
+|--------|-------|----------|
+| Critical | Red | `#ff4d4d` |
+| Severe | Dark Red | `#bd2d2d` |
+| Warning | Orange | `#ffaa00` |
+| Caution | Yellow | `#ffd700` |
+| Operational | Green | `#96b38a` |
+| Optimal | Bright Green | `#00ff00` |
+
+---
+
+## ❌ Troubleshooting
+
+### Error: 404 Not Found
+- ✅ Check `github_username` variable = `TafuTafufu`
+- ✅ Check `github_repo` variable = `UUC_Gladiator`
+- ✅ Check `ref` param = `stage-2-test-branch`
+- ✅ Verify Authorization token is valid
+
+### Error: 409 Conflict
+- ❌ The SHA you're using is outdated
+- ✅ Run GET request again to get fresh SHA
+- ✅ Every successful PUT changes the SHA!
+
+### Error: 422 Unprocessable Entity
+- ❌ Base64 encoding failed (likely Chinese character issue)
+- ✅ Make sure Pre-request Script uses `btoa(unescape(encodeURIComponent(...)))`
+- ✅ Don't manually edit the `content` field
 
 ### Players See Old Data
-**Cause**: Browser cache or GitHub Pages hasn't rebuilt yet  
-**Solution**: Wait 1-2 minutes, then have players type `status` again
+- ✅ Cache-busting is now implemented (`?t=timestamp`)
+- ⏳ GitHub Pages takes 1-2 minutes to rebuild
+- ✅ Tell players to type `status` again after 2 minutes
 
 ---
 
-## Color Reference
+## 📋 Quick Reference
 
-Use these colors for different status severity levels:
+### Workflow Summary:
+```
+GET → Copy SHA → Edit values in Pre-request Script → 
+Paste SHA in Body → PUT → 200 OK → Wait 1-2 min → 
+Players type 'status' → See new values!
+```
 
-| Color | Hex Code | Usage |
-|-------|----------|-------|
-| 🟢 Green | `#00ff00` | Excellent / Optimal |
-| 🟢 Light Green | `#96b38a` | Good / Nominal |
-| 🟡 Yellow | `#ffaa00` | Repairing / Warning |
-| 🟠 Orange | `#ff8800` | Degraded |
-| 🔴 Light Red | `#ff4d4d` | Damaged / Offline |
-| 🔴 Red | `#bd2d2d` | Severe / Failed |
-| 🔴 Bright Red | `#ff0000` | Critical / Emergency |
+### SHA Lifecycle:
+```
+File v1 (SHA: abc123) → PUT update → 
+File v2 (SHA: def456) → PUT update → 
+File v3 (SHA: ghi789) → ...
+```
+
+**Every update creates a NEW SHA!**
 
 ---
 
-## Player Experience
+## 🚀 Example Scenarios
 
-**What Players See:**
+### Scenario 1: Hull Takes Damage (50% → 25%)
+1. GET → Copy SHA
+2. Pre-request Script: Change `"value": 50` to `"value": 25`
+3. Body: Paste SHA
+4. Send → 200 OK
+5. Wait 1-2 min
+6. Players type `status` → See "25%"
 
-```
-[K2-PS187 Core Access@K2-PS187]$ status
-正在加载状态... / Loading status...
-
-===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====
-
-船体完整性：严重受损 (23%)
-推进系统：离线
-生命维持：故障
-武器系统：不可用
-通讯阵列：微弱信号
-核心 AI：在线 (K2-PS187 神经核心)
-
-警告：检测到多处结构性损伤
-建议：立即进行紧急维修
-
-========================================================
-```
-
-**After you update via Postman:**
-
-```
-[K2-PS187 Core Access@K2-PS187]$ status
-正在加载状态... / Loading status...
-
-===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====
-
-船体完整性：危急 (8%)
-推进系统：离线
-生命维持：失效
-武器系统：毁坏
-通讯阵列：中断
-核心 AI：不稳定 (K2-PS187 神经核心)
-
-危急警告：多系统失效 / CRITICAL: MULTIPLE SYSTEM FAILURE
-船体解体倒计时：15分钟 / HULL COLLAPSE IN: 15 MINUTES
-
-========================================================
-```
+### Scenario 2: Life Support Restored
+1. GET → Copy SHA
+2. Pre-request Script: 
+   ```javascript
+   "lifeSupport": {
+     "status": "在线",  // Changed from "故障"
+     "color": "#96b38a"  // Changed from "#bd2d2d"
+   }
+   ```
+3. Body: Paste SHA
+4. Send → 200 OK
+5. Players see green "在线" status!
 
 ---
 
-## Tips for Game Masters
+## 📝 Notes
 
-1. **Pre-prepare scenarios**: Create 3-5 status configurations for different story moments
-2. **Schedule updates**: Update status between game sessions or during breaks
-3. **Test first**: Always test on a copy before updating during live gameplay
-4. **Gradual degradation**: Lower hull integrity by 5-10% each update for dramatic tension
-5. **Recovery arcs**: Show repairs progressing to reward player actions
-6. **Surprise events**: Suddenly change status mid-session for plot twists
+- **Branch**: Always use `stage-2-test-branch` for testing
+- **Rebuild Time**: GitHub Pages typically rebuilds in 60-120 seconds
+- **Cache**: Fully bypassed via timestamp parameter
+- **SHA Requirement**: Mandatory for every update (prevents conflicts)
+- **Encoding**: Automatic via Pre-request Script
+- **Token Expiry**: Check token expiration date regularly
 
 ---
 
-*End of Guide*
+**Created for**: UUC Gladiator Tactical Network  
+**Server**: K2-PS187 Ghost Ship Mainframe  
+**Deployment**: GitHub Pages (`stage-2-test-branch`)  
+**Last Updated**: November 11, 2025

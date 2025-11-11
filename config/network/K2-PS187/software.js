@@ -179,7 +179,7 @@ function status(args) {
         const statusId = 'status-output-' + Date.now();
         
         setTimeout(() => {
-            fetch('config/network/K2-PS187/shipStatus.json')
+            fetch(`config/network/K2-PS187/shipStatus.json?t=${Date.now()}`)
                 .then(response => response.json())
                 .then(data => {
                     const statusDiv = document.getElementById(statusId);
@@ -253,7 +253,7 @@ function status(args) {
         }
         
         setTimeout(() => {
-            fetch('config/network/K2-PS187/shipStatus.json')
+            fetch(`config/network/K2-PS187/shipStatus.json?t=${Date.now()}`)
                 .then(response => response.json())
                 .then(data => {
                     const statusDiv = document.getElementById(statusId);

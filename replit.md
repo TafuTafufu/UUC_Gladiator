@@ -103,6 +103,15 @@ npm test
 Runs ESLint with auto-fix on source files.
 
 ## Deployment
+
+### GitHub Pages (Production)
+Deployed on `stage-2-test-branch`:
+- URL: https://tafutafufu.github.io/UUC_Gladiator/
+- Auto-deploys on push to `stage-2-test-branch`
+- Rebuild time: 1-2 minutes
+- Supports dynamic content via Postman API workflow
+
+### Replit (Development)
 Configured for Replit Autoscale deployment:
 - Stateless static website
 - Serves files on port 5000
@@ -147,12 +156,38 @@ A fully custom horror-themed server featuring the corrupted AI of the abandoned 
 - **Easter Egg System**: Query 4 only appears in help after asking questions 1-3
 - **Progress Bar**: 25-block animated scan progress (8 second duration)
 
+### Dynamic Ship Status System ⭐ NEW FEATURE
+**Real-time ship status updates via Postman API during gameplay!**
+
+**Architecture:**
+- `shipStatus.json` stores current ship system values (hull, propulsion, life support, etc.)
+- Terminal fetches fresh JSON on every `status` command (cache-busting via timestamp)
+- GM updates values via Postman → GitHub API → GitHub Pages rebuilds → Players see updates
+- **No page refresh required** - players just type `status` again
+
+**Technical Implementation:**
+- Fetch URL: `shipStatus.json?t={timestamp}` (bypasses 10-min browser cache)
+- GitHub Pages rebuild time: 1-2 minutes
+- SHA-based version control (prevents update conflicts)
+- Base64 encoding handled via Postman Pre-request Script
+- Supports Unicode (Chinese characters) properly
+
+**Workflow:**
+1. GM: GET request → Copy SHA
+2. GM: Edit values in Pre-request Script → PUT with SHA
+3. GitHub Pages: Auto-rebuild (1-2 min)
+4. Players: Type `status` → See fresh data
+
+**Documentation**: See `POSTMAN_UPDATE_GUIDE.md` for complete setup
+
 ### Files Modified for K2
-- `config/network/K2-PS187/software.js` - All K2 custom commands
+- `config/network/K2-PS187/software.js` - All K2 custom commands + cache-busting fetch
+- `config/network/K2-PS187/shipStatus.json` - Dynamic ship status data (Postman-updatable)
 - `config/network/K2-PS187/userlist.json` - User roles and credentials
 - `config/network/K2-PS187/manifest.json` - Server configuration
 - `config/network/UUC_Gladiator/override.js` - Server isolation checks
 - `src/kernel.js` - Server switching and command routing
+- `POSTMAN_UPDATE_GUIDE.md` - Complete Postman API workflow guide
 
 ## Current State
 The terminal is fully functional with TWO complete servers:
