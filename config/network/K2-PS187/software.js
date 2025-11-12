@@ -572,11 +572,12 @@ function scan(args) {
     }, 100);
     
     // Return the initial message with progress bar placeholder
+    const initialBar = '<span style="color: #333;">' + '█'.repeat(25) + '</span>';
     return [
         '<span style="color:#96b38a">开始扫描褴褛人号...</span>',
         '<span style="color:#96b38a">Initiating scan of Tatterdemalion...</span>',
         '',
-        `<span id="${scanId}">扫描进度: [░░░░░░░░░░░░░░░░░░░░░░░░░] 0%</span>`,
+        `<span id="${scanId}">扫描进度: [${initialBar}] 0%</span>`,
         `<div id="${scanId}-results"></div>`
     ].join('  ');
 }
