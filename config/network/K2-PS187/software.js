@@ -511,16 +511,18 @@ function scan(args) {
                     progress += 4; // Increment by 4 to reach 100 in 25 steps
                     const filled = Math.floor((progress / 100) * barLength);
                     const empty = barLength - filled;
-                    const bar = '█'.repeat(filled) + '░'.repeat(empty);
+                    // Use same character (█) for both, but dim the empty ones
+                    const filledBar = '<span style="color: #96b38a;">' + '█'.repeat(filled) + '</span>';
+                    const emptyBar = '<span style="color: #333;">' + '█'.repeat(empty) + '</span>';
                     
                     if (progress <= 100) {
-                        progressBar.innerHTML = `<span style="font-family: monospace;">扫描进度: [${bar}] ${progress}%</span>`;
+                        progressBar.innerHTML = `扫描进度: [${filledBar}${emptyBar}] ${progress}%`;
                         window.scrollTo(0, document.body.scrollHeight);
                     }
                     
                     if (progress >= 100) {
                         clearInterval(interval);
-                        progressBar.innerHTML = `<span style="font-family: monospace;">扫描进度: [${bar}] 100%</span>`;
+                        progressBar.innerHTML = `扫描进度: [${filledBar}${emptyBar}] 100%`;
                         window.scrollTo(0, document.body.scrollHeight);
                         
                         // After completion, show the scan results with typewriter effect
