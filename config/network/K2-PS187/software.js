@@ -1,6 +1,12 @@
 // K2-PS187 Server Commands
 // Role-based command implementations
 
+// Global cache for ship status (updated by scan command)
+window.k2_cachedShipStatus = null;
+
+// Global flag for scan in progress (blocks other commands)
+window.k2_scanInProgress = false;
+
 // Helper function to get current user role from userDatabase
 // Note: userDatabase and serverDatabase are global variables in kernel.js
 function getK2UserRole() {
@@ -30,6 +36,12 @@ function help(args) {
     if (!isOnK2Server()) {
         return null;
     }
+    
+    // Check if scan is in progress
+    if (window.k2_scanInProgress) {
+        return '<span style="color:#fbbf24">错误：扫描正在进行中 / Error: Scan in progress</span>';
+    }
+    
     const role = getK2UserRole();
     
     // Crew members have no access to commands except exit
@@ -105,6 +117,12 @@ function help(args) {
 // log command - shows ship log (core access only)
 function log(args) {
     if (!isOnK2Server()) return null;
+    
+    // Check if scan is in progress
+    if (window.k2_scanInProgress) {
+        return '<span style="color:#fbbf24">错误：扫描正在进行中 / Error: Scan in progress</span>';
+    }
+    
     const role = getK2UserRole();
     
     if (role === 'maintenance' || role === 'crew') {
@@ -165,57 +183,51 @@ function log(args) {
     return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
 }
 
-// status command - shows ship status (fetches latest data from JSON)
+// status command - displays CACHED ship status from last scan
 function status(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
+    
+    // Check if scan is in progress
+    if (window.k2_scanInProgress) {
+        return '<span style="color:#fbbf24">错误：扫描正在进行中 / Error: Scan in progress</span>';
+    }
     
     if (role === 'crew') {
         return '<span style="color:#bd2d2d">错误：无效的消息密钥 / Invalid message key</span>';
     }
     
+    // Check if we have cached data
+    if (!window.k2_cachedShipStatus) {
+        return '<span style="color:#bd2d2d">错误：无可用数据 / Error: No data available<br><br>请先使用 "scan tatterdemalion" 命令获取最新状态<br>Please use "scan tatterdemalion" command first to fetch latest status</span>';
+    }
+    
+    const data = window.k2_cachedShipStatus;
+    
     if (role === 'maintenance') {
         // Maintenance users get instant display (no typewriter)
-        const statusId = 'status-output-' + Date.now();
+        const lines = [
+            '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+            '<span style="color:#888">(显示上次扫描结果 / Showing last scan results)</span>',
+            '',
+            `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
+            `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
+            `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
+            `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
+            `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
+            `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
+            ''
+        ];
         
-        setTimeout(() => {
-            fetch(`config/network/K2-PS187/shipStatus.json?t=${Date.now()}`)
-                .then(response => response.json())
-                .then(data => {
-                    const statusDiv = document.getElementById(statusId);
-                    if (!statusDiv) return;
-                    
-                    const lines = [
-                        '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
-                        '',
-                        `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
-                        `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
-                        `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
-                        `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
-                        `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
-                        `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
-                        ''
-                    ];
-                    
-                    // Add warnings
-                    data.warnings.forEach(warning => {
-                        lines.push(`<span style="color:#ff4d4d">${warning}</span>`);
-                    });
-                    
-                    lines.push('');
-                    lines.push('<span style="color:#96b38a">========================================================</span>');
-                    
-                    statusDiv.innerHTML = lines.join('<br>');
-                })
-                .catch(error => {
-                    const statusDiv = document.getElementById(statusId);
-                    if (statusDiv) {
-                        statusDiv.innerHTML = '<span style="color:#ff4d4d">错误：无法加载状态数据 / Error: Cannot load status data</span>';
-                    }
-                });
-        }, 50);
+        // Add warnings
+        data.warnings.forEach(warning => {
+            lines.push(`<span style="color:#ff4d4d">${warning}</span>`);
+        });
         
-        return `<div id="${statusId}">正在加载状态... / Loading status...</div>`;
+        lines.push('');
+        lines.push('<span style="color:#96b38a">========================================================</span>');
+        
+        return lines.join('<br>');
     }
     
     if (role === 'core') {
@@ -253,43 +265,34 @@ function status(args) {
         }
         
         setTimeout(() => {
-            fetch(`config/network/K2-PS187/shipStatus.json?t=${Date.now()}`)
-                .then(response => response.json())
-                .then(data => {
-                    const statusDiv = document.getElementById(statusId);
-                    if (!statusDiv) return;
-                    
-                    const statusLines = [
-                        '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
-                        '',
-                        `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
-                        `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
-                        `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
-                        `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
-                        `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
-                        `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
-                        ''
-                    ];
-                    
-                    // Add warnings
-                    data.warnings.forEach(warning => {
-                        statusLines.push(`<span style="color:#ff4d4d">${warning}</span>`);
-                    });
-                    
-                    statusLines.push('');
-                    statusLines.push('<span style="color:#96b38a">========================================================</span>');
-                    
-                    typewriterEffect(statusDiv, statusLines);
-                })
-                .catch(error => {
-                    const statusDiv = document.getElementById(statusId);
-                    if (statusDiv) {
-                        statusDiv.innerHTML = '<span style="color:#ff4d4d">错误：无法加载状态数据 / Error: Cannot load status data</span>';
-                    }
-                });
+            const statusDiv = document.getElementById(statusId);
+            if (!statusDiv) return;
+            
+            const statusLines = [
+                '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+                '<span style="color:#888">(显示上次扫描结果 / Showing last scan results)</span>',
+                '',
+                `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
+                `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
+                `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
+                `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
+                `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
+                `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
+                ''
+            ];
+            
+            // Add warnings
+            data.warnings.forEach(warning => {
+                statusLines.push(`<span style="color:#ff4d4d">${warning}</span>`);
+            });
+            
+            statusLines.push('');
+            statusLines.push('<span style="color:#96b38a">========================================================</span>');
+            
+            typewriterEffect(statusDiv, statusLines);
         }, 50);
         
-        return `<div id="${statusId}">正在加载状态... / Loading status...</div>`;
+        return `<div id="${statusId}"></div>`;
     }
     
     return '<span style="color:#bd2d2d">权限不足 / Access denied</span>';
@@ -298,6 +301,12 @@ function status(args) {
 // query command - ask questions to the AI
 function query(args) {
     if (!isOnK2Server()) return null;
+    
+    // Check if scan is in progress
+    if (window.k2_scanInProgress) {
+        return '<span style="color:#fbbf24">错误：扫描正在进行中 / Error: Scan in progress</span>';
+    }
+    
     const role = getK2UserRole();
     
     if (role === 'maintenance' || role === 'crew') {
@@ -416,7 +425,7 @@ function query(args) {
     return '<span style="color:#bd2d2d">权限不足 / Access denied</span>';
 }
 
-// scan command - scan tatterdemalion with progress bar
+// scan command - fetches latest ship status and caches it (30 second scan)
 function scan(args) {
     if (!isOnK2Server()) return null;
     const role = getK2UserRole();
@@ -434,12 +443,24 @@ function scan(args) {
         return '<span style="color:#bd2d2d">错误：未知目标 / Unknown target</span>';
     }
     
+    // Check if scan is already in progress
+    if (window.k2_scanInProgress) {
+        return '<span style="color:#fbbf24">错误：扫描已在进行中 / Error: Scan already in progress</span>';
+    }
+    
+    // Set scan in progress flag to block other commands
+    window.k2_scanInProgress = true;
+    
     // Create a unique ID for this scan's progress bar
     const scanId = 'scan-progress-' + Date.now();
     
     // Typewriter effect function
     function typewriterEffect(element, lines, lineIndex = 0, charIndex = 0) {
-        if (lineIndex >= lines.length) return;
+        if (lineIndex >= lines.length) {
+            // When typewriter completes, clear the scan flag
+            window.k2_scanInProgress = false;
+            return;
+        }
         
         const currentLine = lines[lineIndex];
         const lineId = scanId + '-line-' + lineIndex;
@@ -471,54 +492,81 @@ function scan(args) {
     setTimeout(() => {
         let progress = 0;
         const progressBar = document.getElementById(scanId);
-        if (!progressBar) return;
+        if (!progressBar) {
+            window.k2_scanInProgress = false;
+            return;
+        }
         
-        const barLength = 25; // Longer progress bar (25 blocks)
+        const barLength = 25; // Progress bar (25 blocks)
         
-        const interval = setInterval(() => {
-            progress += 4; // Increment by 4 to reach 100 in 25 steps
-            const filled = Math.floor((progress / 100) * barLength);
-            const empty = barLength - filled;
-            const bar = '█'.repeat(filled) + '░'.repeat(empty);
-            
-            if (progress <= 100) {
-                progressBar.innerHTML = `扫描进度: [${bar}] ${progress}%`;
-                window.scrollTo(0, document.body.scrollHeight);
-            }
-            
-            if (progress >= 100) {
-                clearInterval(interval);
-                progressBar.innerHTML = `扫描进度: [${bar}] 100%`;
-                window.scrollTo(0, document.body.scrollHeight);
+        // Fetch fresh data at the start of scan
+        fetch(`config/network/K2-PS187/shipStatus.json?t=${Date.now()}`)
+            .then(response => response.json())
+            .then(data => {
+                // Cache the fetched data
+                window.k2_cachedShipStatus = data;
                 
-                // After completion, show the scan results with typewriter effect
-                setTimeout(() => {
-                    const resultsDiv = document.getElementById(scanId + '-results');
-                    if (resultsDiv) {
-                        const resultLines = [
-                            '',
-                            '<span style="color:#96b38a">扫描完成 / Scan complete</span>',
-                            '',
-                            '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
-                            '',
-                            '<span style="color:#ccc">船体完整性：</span><span style="color:#ff4d4d">严重受损 (23%)</span>',
-                            '<span style="color:#ccc">推进系统：</span><span style="color:#ff4d4d">离线</span>',
-                            '<span style="color:#ccc">生命维持：</span><span style="color:#bd2d2d">故障</span>',
-                            '<span style="color:#ccc">武器系统：</span><span style="color:#bd2d2d">不可用</span>',
-                            '<span style="color:#ccc">通讯阵列：</span><span style="color:#96b38a">微弱信号</span>',
-                            '<span style="color:#ccc">核心 AI：</span><span style="color:#96b38a">在线 (K2-PS187 神经核心)</span>',
-                            '',
-                            '<span style="color:#ff4d4d">警告：检测到多处结构性损伤</span>',
-                            '<span style="color:#ff4d4d">建议：立即进行紧急维修</span>',
-                            '',
-                            '<span style="color:#96b38a">========================================================</span>'
-                        ];
-                        
-                        typewriterEffect(resultsDiv, resultLines);
+                // Start progress bar animation
+                const interval = setInterval(() => {
+                    progress += 4; // Increment by 4 to reach 100 in 25 steps
+                    const filled = Math.floor((progress / 100) * barLength);
+                    const empty = barLength - filled;
+                    const bar = '█'.repeat(filled) + '░'.repeat(empty);
+                    
+                    if (progress <= 100) {
+                        progressBar.innerHTML = `扫描进度: [${bar}] ${progress}%`;
+                        window.scrollTo(0, document.body.scrollHeight);
                     }
-                }, 300);
-            }
-        }, 320); // Update every 320ms for ~8 second total animation (25 steps * 320ms = 8000ms)
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        progressBar.innerHTML = `扫描进度: [${bar}] 100%`;
+                        window.scrollTo(0, document.body.scrollHeight);
+                        
+                        // After completion, show the scan results with typewriter effect
+                        setTimeout(() => {
+                            const resultsDiv = document.getElementById(scanId + '-results');
+                            if (resultsDiv) {
+                                const resultLines = [
+                                    '',
+                                    '<span style="color:#96b38a">扫描完成 / Scan complete</span>',
+                                    '',
+                                    '<span style="color:#96b38a">===== 褴褛人号舰体状态 / Tatterdemalion Ship Status =====</span>',
+                                    '',
+                                    `<span style="color:#ccc">船体完整性：</span><span style="color:${data.hullIntegrity.color}">${data.hullIntegrity.status} (${data.hullIntegrity.value}${data.hullIntegrity.unit})</span>`,
+                                    `<span style="color:#ccc">推进系统：</span><span style="color:${data.propulsion.color}">${data.propulsion.status}</span>`,
+                                    `<span style="color:#ccc">生命维持：</span><span style="color:${data.lifeSupport.color}">${data.lifeSupport.status}</span>`,
+                                    `<span style="color:#ccc">武器系统：</span><span style="color:${data.weapons.color}">${data.weapons.status}</span>`,
+                                    `<span style="color:#ccc">通讯阵列：</span><span style="color:${data.communications.color}">${data.communications.status}</span>`,
+                                    `<span style="color:#ccc">核心 AI：</span><span style="color:${data.coreAI.color}">${data.coreAI.status}</span>`,
+                                    ''
+                                ];
+                                
+                                // Add warnings from fetched data
+                                data.warnings.forEach(warning => {
+                                    resultLines.push(`<span style="color:#ff4d4d">${warning}</span>`);
+                                });
+                                
+                                resultLines.push('');
+                                resultLines.push('<span style="color:#96b38a">========================================================</span>');
+                                
+                                typewriterEffect(resultsDiv, resultLines);
+                            } else {
+                                // Clear flag if resultsDiv not found
+                                window.k2_scanInProgress = false;
+                            }
+                        }, 300);
+                    }
+                }, 1200); // Update every 1200ms for ~30 second total animation (25 steps * 1200ms = 30000ms)
+            })
+            .catch(error => {
+                // On fetch error, show error message and clear flag
+                const progressBar = document.getElementById(scanId);
+                if (progressBar) {
+                    progressBar.innerHTML = '<span style="color:#ff4d4d">扫描失败：无法加载数据 / Scan failed: Cannot load data</span>';
+                }
+                window.k2_scanInProgress = false;
+            });
     }, 100);
     
     // Return the initial message with progress bar placeholder

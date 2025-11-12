@@ -143,9 +143,9 @@ A fully custom horror-themed server featuring the corrupted AI of the abandoned 
 
 ### Custom K2 Commands
 - `log` - Display 12-day ship log (days 387-418) with sequential chunk animation
-- `status` - Ship systems status (animated typewriter effect for core users)
+- `status` - Displays CACHED ship status from last scan (instant, no fetch)
 - `query [1-4]` - Ask questions to K2 AI (easter egg: question 4 unlocks after asking 1-3)
-- `scan tatterdemalion` - Animated scan with progress bar (core users only)
+- `scan tatterdemalion` - Fetches LATEST ship status from GitHub, caches it, 30-second scan (blocks other commands)
 - `exit` - Returns ALL users to UUC_Gladiator in not-logged-in state
 
 ### Technical Implementation
@@ -154,31 +154,36 @@ A fully custom horror-themed server featuring the corrupted AI of the abandoned 
 - **Typewriter Effects**: 15-20ms character delays for immersive text animations
 - **Sequential Animation**: Ship log displays in chunks with 500ms intervals
 - **Easter Egg System**: Query 4 only appears in help after asking questions 1-3
-- **Progress Bar**: 25-block animated scan progress (8 second duration)
+- **Progress Bar**: 25-block animated scan progress (30 second duration)
+- **Command Blocking**: All commands blocked during scan (prevents interference)
+- **Data Caching**: Ship status cached in memory after scan, displayed instantly by `status` command
 
 ### Dynamic Ship Status System ⭐ NEW FEATURE
 **Real-time ship status updates via Postman API during gameplay!**
 
 **Architecture:**
 - `shipStatus.json` stores current ship system values (hull, propulsion, life support, etc.)
-- Terminal fetches fresh JSON on every `status` command (cache-busting via timestamp)
-- GM updates values via Postman → GitHub API → GitHub Pages rebuilds → Players see updates
-- **No page refresh required** - players just type `status` again
+- `scan tatterdemalion` fetches LATEST JSON from GitHub and caches it (30-second scan)
+- `status` displays CACHED data from last scan (instant, no network fetch)
+- GM updates values via Postman → GitHub API → GitHub Pages rebuilds → Players scan again
+- **No page refresh required** - players just type `scan tatterdemalion` to get fresh data
 
 **Technical Implementation:**
 - Fetch URL: `shipStatus.json?t={timestamp}` (bypasses 10-min browser cache)
+- Data cached in `window.k2_cachedShipStatus` after scan completes
+- Scan duration: 30 seconds (blocks all other commands during scan)
 - GitHub Pages rebuild time: 1-2 minutes
-- SHA-based version control (prevents update conflicts)
-- Base64 encoding handled via Postman Pre-request Script
+- SHA auto-fetched via Postman Pre-request Script (no manual GET needed!)
+- Base64 encoding handled automatically via Pre-request Script
 - Supports Unicode (Chinese characters) properly
 
 **Workflow:**
-1. GM: GET request → Copy SHA
-2. GM: Edit values in Pre-request Script → PUT with SHA
-3. GitHub Pages: Auto-rebuild (1-2 min)
-4. Players: Type `status` → See fresh data
+1. GM: Edit ship values in Postman Pre-request Script → Click Send (automated SHA fetch!)
+2. GitHub Pages: Auto-rebuild (1-2 min)
+3. Players: Type `scan tatterdemalion` → Wait 30 sec → See fresh data
+4. Players: Type `status` anytime → See cached scan result instantly
 
-**Documentation**: See `POSTMAN_UPDATE_GUIDE.md` for complete setup
+**Documentation**: See `docs/POSTMAN_SETUP_GUIDE.md` for complete setup
 
 ### Files Modified for K2
 - `config/network/K2-PS187/software.js` - All K2 custom commands + cache-busting fetch
