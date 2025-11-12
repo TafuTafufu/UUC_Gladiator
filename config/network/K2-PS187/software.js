@@ -514,13 +514,13 @@ function scan(args) {
                     const bar = '█'.repeat(filled) + '░'.repeat(empty);
                     
                     if (progress <= 100) {
-                        progressBar.innerHTML = `扫描进度: [${bar}] ${progress}%`;
+                        progressBar.innerHTML = `<span style="font-family: monospace;">扫描进度: [${bar}] ${progress}%</span>`;
                         window.scrollTo(0, document.body.scrollHeight);
                     }
                     
                     if (progress >= 100) {
                         clearInterval(interval);
-                        progressBar.innerHTML = `扫描进度: [${bar}] 100%`;
+                        progressBar.innerHTML = `<span style="font-family: monospace;">扫描进度: [${bar}] 100%</span>`;
                         window.scrollTo(0, document.body.scrollHeight);
                         
                         // After completion, show the scan results with typewriter effect
