@@ -1,6 +1,6 @@
 {
   "serverAddress": "K2-PS187",
-  "serverName": "Ghost Ship Mainframe",
+  "serverName": "Tatterdemalion",
   "iconName": "UUC_Gladiator.jpg",
   "terminalID": "K2-PS187",
   "overrideSystemCommands": ["help", "status", "exit"],
